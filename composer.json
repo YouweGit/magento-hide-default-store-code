@@ -1,0 +1,8 @@
+{
+    "name": "bubble/hide_default_store_code",
+    "type": "magento-module",
+    "description": "Magento module for hiding the default store code in the url",
+    "require": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
