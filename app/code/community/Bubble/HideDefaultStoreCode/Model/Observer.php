@@ -7,7 +7,9 @@
  */
 class Bubble_HideDefaultStoreCode_Model_Observer
 {
+
     /**
+     * @event controller_front_init_before
      * @param Varien_Event_Observer $observer
      */
     public function onFrontInitBefore(Varien_Event_Observer $observer)
@@ -16,15 +18,17 @@ class Bubble_HideDefaultStoreCode_Model_Observer
             /** @var $front Mage_Core_Controller_Varien_Front */
             $front = $observer->getEvent()->getFront();
             $request = $front->getRequest();
-            $requestUri = $request->getRequestUri();
-            $requestUri = str_replace($request->getServer('SCRIPT_NAME'), '', $requestUri);
-            $requestUri = trim($requestUri, '/');
-            $pieces = explode('/', $requestUri);
-            if (!in_array($pieces[0], $this->_getStoreCodes())) {
+            $secure = Mage::app()->getStore()->isCurrentlySecure();
+            $baseUrl = Mage::getStoreConfig('web/' . ($secure ? 'secure' : 'unsecure') . '/base_url');
+            $pieces = explode('/', $request->getRequestUri());
+            $baseUrlPieces = array_slice(explode('/', trim($baseUrl, '/')), 3);
+            $baseCount = count($baseUrlPieces);
+            if (!in_array($pieces[1 + $baseCount], $this->_getStoreCodes())) {
                 $storeCode = $this->_getDefaultStore()->getCode();
                 if (!empty($storeCode)) {
-                    $requestUri = $request->getServer('SCRIPT_NAME') . '/' . $storeCode . '/' . $requestUri;
-                    $request->setRequestUri($requestUri);
+                    $pieces = array_slice($pieces, count($baseUrlPieces) + 1);
+                    $uri = '/' . implode('/', array_merge($baseUrlPieces, array($storeCode), $pieces));
+                    $request->setRequestUri($uri);
                     $request->setActionName(null);
                 }
             }
